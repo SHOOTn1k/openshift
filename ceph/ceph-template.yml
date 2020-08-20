@@ -1,0 +1,27 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+labels:
+  redis: master
+metadata:
+  annotations:
+    description: Description
+    tags: ceph
+  creationTimestamp: null
+  name: ceph-template
+objects:
+- apiVersion: rbac.authorization.k8s.io/v1beta1
+  kind: ClusterRoleBinding
+  metadata:
+    name: ${PROJECT_NAME}-ceph-cluster-admin
+  roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: ClusterRole
+    name: cluster-admin
+  subjects:
+  - kind: ServiceAccount
+    name: internal-cluster-admin
+    namespace: ${PROJECT_NAME}
+parameters:
+- description: Project where CephCluster will be deployed
+  value: ceph
+  name: PROJECT_NAME
