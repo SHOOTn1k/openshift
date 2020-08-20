@@ -6,7 +6,6 @@ metadata:
   annotations:
     description: Description
     tags: ceph
-  creationTimestamp: null
   name: ceph-template
 objects:
 - apiVersion: rbac.authorization.k8s.io/v1beta1
@@ -19,8 +18,12 @@ objects:
     name: cluster-admin
   subjects:
   - kind: ServiceAccount
-    name: internal-cluster-admin
+    name: ceph-internal-cluster-admin
     namespace: ${PROJECT_NAME}
+- apiVersion: v1
+  kind: ServiceAccount
+  metadata:
+    name: ceph-internal-cluster-admin
 parameters:
 - description: Project where CephCluster will be deployed
   value: ceph
