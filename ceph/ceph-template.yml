@@ -9,6 +9,10 @@ metadata:
   creationTimestamp: null
   name: ceph-template
 objects:
+- apiVersion: v1
+  kind: ServiceAccount
+  metadata:
+    name: internal-cluster-admin
 - apiVersion: rbac.authorization.k8s.io/v1beta1
   kind: ClusterRoleBinding
   metadata:
@@ -308,6 +312,37 @@ objects:
         osdsPerDevice: "1" # this value can be overridden at the node or device level
       directories:
       - path: /var/lib/rook-${PROJECT_NAME}
+- apiVersion: batch/v1
+  kind: Job
+  metadata:
+    labels:
+      job-name: ceph-scc-job
+    name: ceph-scc-job
+  spec:
+    completions: 1
+    parallelism: 1
+    template:
+      metadata:
+        creationTimestamp: null
+        labels:
+          job-name: ceph-scc-job
+        name: ceph-scc-job
+      spec:
+        containers:
+          - command: ["oc", "adm", "policy", "add-scc-to-user", "rook-ceph", "-z", "default", "-z", "rook-ceph-mgr", "-z", "rook-ceph-osd"]
+            image: shootn1k/oc-base
+            imagePullPolicy: Always
+            name: ceph-scc-job
+            resources: {}
+            terminationMessagePath: /dev/termination-log
+            terminationMessagePolicy: File
+        dnsPolicy: ClusterFirst
+        restartPolicy: OnFailure
+        schedulerName: default-scheduler
+        securityContext: {}
+        serviceAccount: internal-cluster-admin
+        serviceAccountName: internal-cluster-admin
+        terminationGracePeriodSeconds: 30
 parameters:
 - description: Project where CephCluster will be deployed
   value: ceph
