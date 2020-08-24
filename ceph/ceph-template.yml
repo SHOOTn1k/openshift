@@ -374,6 +374,31 @@ objects:
         serviceAccount: internal-cluster-admin
         serviceAccountName: internal-cluster-admin
         terminationGracePeriodSeconds: 30
+- apiVersion: ceph.rook.io/v1
+  kind: CephObjectStore
+  metadata:
+    name: my-store
+    namespace: rook-ceph
+  spec:
+    metadataPool:
+      replicated:
+        size: 1
+    dataPool:
+      replicated:
+        size: 1
+    gateway:
+      type: s3
+      port: 80
+      securePort:
+      instances: 1
+- apiVersion: ceph.rook.io/v1
+  kind: CephObjectStoreUser
+  metadata:
+    name: my-user
+    namespace: rook-ceph
+  spec:
+    store: my-store
+    displayName: "my display name"
 parameters:
 - description: Project where CephCluster will be deployed
   value: ceph
