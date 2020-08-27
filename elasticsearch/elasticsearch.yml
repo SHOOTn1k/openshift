@@ -10,22 +10,32 @@ objects:
 - apiVersion: v1
   kind: PersistentVolumeClaim
   metadata:
-    name: ${OBJECT_NAME_PREFIX}
+    name: ${ELASTIC_NAME_PREFIX}
   spec:
     accessModes:
     - ReadWriteOnce
     resources:
       requests:
-        storage: ${VOLUME_CAPACITY}
+        storage: ${ELASTIC_VOLUME_CAPACITY}
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    name: ${KIBANA_NAME_PREFIX}
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    resources:
+      requests:
+        storage: ${KIBANA_VOLUME_CAPACITY}
 - apiVersion: apps.openshift.io/v1
   kind: DeploymentConfig
   metadata:
-    name: ${OBJECT_NAME_PREFIX}
+    name: ${ELASTIC_NAME_PREFIX}
   spec:
     replicas: 1
     selector:
-      app: ${OBJECT_NAME_PREFIX}
-      deploymentconfig: ${OBJECT_NAME_PREFIX}
+      app: ${ELASTIC_NAME_PREFIX}
+      deploymentconfig: ${ELASTIC_NAME_PREFIX}
     strategy:
       activeDeadlineSeconds: 21600
       recreateParams:
@@ -41,7 +51,7 @@ objects:
           deploymentconfig: elasticsearch
       spec:
         containers:
-        - image: bitnami/elasticsearch:7.7.0
+        - image: bitnami/elasticsearch:7.9.0
           imagePullPolicy: IfNotPresent
           name: elasticsearch
           readinessProbe:
@@ -69,11 +79,11 @@ objects:
             protocol: TCP
           volumeMounts:
           - mountPath: /bitnami/elasticsearch/data
-            name: ${OBJECT_NAME_PREFIX}-data
+            name: ${ELASTIC_NAME_PREFIX}-data
         volumes:
-        - name: ${OBJECT_NAME_PREFIX}-data
+        - name: ${ELASTIC_NAME_PREFIX}-data
           persistentVolumeClaim:
-            claimName: ${OBJECT_NAME_PREFIX}
+            claimName: ${ELASTIC_NAME_PREFIX}
 - apiVersion: v1
   kind: Service
   metadata:
@@ -88,13 +98,68 @@ objects:
     - name: transport
       port: 9300
     selector:
-      app: ${OBJECT_NAME_PREFIX}
+      app: ${ELASTIC_NAME_PREFIX}
+- apiVersion: apps.openshift.io/v1
+  kind: DeploymentConfig
+  metadata:
+    labels:
+      app: ${KIBANA_NAME_PREFIX}
+    name: ${KIBANA_NAME_PREFIX}
+  spec:
+    replicas: 1
+    strategy:
+      activeDeadlineSeconds: 21600
+      recreateParams:
+        timeoutSeconds: 600
+      resources: {}
+      type: Recreate    
+    selector:
+      app: ${KIBANA_NAME_PREFIX}
+      deploymentconfig: ${KIBANA_NAME_PREFIX}
+    template:
+      metadata:
+        labels:
+          app: ${KIBANA_NAME_PREFIX}
+          deploymentconfig: ${KIBANA_NAME_PREFIX}
+      spec:
+        containers:
+          - image: bitnami/kibana:7.9.0
+            imagePullPolicy: ifnotPresent
+            name: kibana
+            ports:
+              - containerPort: 5601
+                protocol: TCP
+            volumeMounts:
+            - mountPath: /bitnami
+              name: ${KIBANA_NAME_PREFIX}-data
+            resources: {}
+            terminationMessagePath: /dev/termination-log
+            terminationMessagePolicy: File
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - name: ${KIBANA_NAME_PREFIX}-data
+          persistentVolumeClaim:
+            claimName: ${KIBANA_NAME_PREFIX}
+    triggers:
+      - type: ConfigChange
 parameters:
-- description: Name prefix for each object created
-  name: OBJECT_NAME_PREFIX
+- description: Name prefix for each elastic-related object created
+  name: ELASTIC_NAME_PREFIX
+  required: true
+  value: elasticsearch
+- description: Name prefix for each kibana-related object created
+  name: KIBANA_NAME_PREFIX
   required: true
   value: elasticsearch
 - description: Capacity for Elasticsearch's PVC
-  name: VOLUME_CAPACITY
+  name: ELASTIC_VOLUME_CAPACITY
+  required: true
+  value: 10Gi
+- description: Capacity for Kibana's PVC
+  name: KIBANA_VOLUME_CAPACITY
   required: true
   value: 10Gi
