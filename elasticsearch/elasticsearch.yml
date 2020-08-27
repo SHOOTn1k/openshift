@@ -146,6 +146,24 @@ objects:
             claimName: ${KIBANA_NAME_PREFIX}
     triggers:
       - type: ConfigChange
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      name: ${KIBANA_NAME_PREFIX}
+    name: ${KIBANA_NAME_PREFIX}
+  spec:
+    ports:
+      - name: tcp
+        port: 5601
+        protocol: TCP
+        targetPort: 5601
+    selector:
+      app: ${KIBANA_NAME_PREFIX}
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
 parameters:
 - description: Name prefix for each elastic-related object created
   name: ELASTIC_NAME_PREFIX
