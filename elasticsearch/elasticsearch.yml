@@ -124,7 +124,7 @@ objects:
       spec:
         containers:
           - image: bitnami/kibana:7.9.0
-            imagePullPolicy: ifnotPresent
+            imagePullPolicy: ifNotPresent
             name: kibana
             ports:
               - containerPort: 5601
