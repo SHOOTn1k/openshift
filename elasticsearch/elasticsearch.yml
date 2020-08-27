@@ -26,6 +26,12 @@ objects:
     selector:
       app: ${OBJECT_NAME_PREFIX}
       deploymentconfig: ${OBJECT_NAME_PREFIX}
+    strategy:
+      activeDeadlineSeconds: 21600
+      recreateParams:
+        timeoutSeconds: 600
+      resources: {}
+      type: Recreate
     template:
       metadata:
         annotations:
@@ -38,6 +44,24 @@ objects:
         - image: bitnami/elasticsearch:7.7.0
           imagePullPolicy: IfNotPresent
           name: elasticsearch
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /_cluster/health
+              port: 9200
+              scheme: HTTP
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /_cluster/health
+              port: 9200
+              scheme: HTTP
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
           ports:
           - containerPort: 9200
             protocol: TCP
