@@ -1,0 +1,76 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  annotations:
+    description: Elasticsearch and kibana persistent template
+    tags: elasticsearch,logs,kibana
+  creationTimestamp: null
+  name: elasticsearch-persistent
+objects:
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    name: ${OBJECT_NAME_PREFIX}
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    resources:
+      requests:
+        storage: ${VOLUME_CAPACITY}
+- apiVersion: apps.openshift.io/v1
+  kind: DeploymentConfig
+  metadata:
+    name: ${OBJECT_NAME_PREFIX}
+  spec:
+    replicas: 1
+    selector:
+      app: ${OBJECT_NAME_PREFIX}
+      deploymentconfig: ${OBJECT_NAME_PREFIX}
+    template:
+      metadata:
+        annotations:
+          openshift.io/generated-by: template
+        labels:
+          app: elasticsearch
+          deploymentconfig: elasticsearch
+      spec:
+        containers:
+        - image: bitnami/elasticsearch:7.7.0
+          imagePullPolicy: IfNotPresent
+          name: elasticsearch
+          ports:
+          - containerPort: 9200
+            protocol: TCP
+          - containerPort: 9300
+            protocol: TCP
+          volumeMounts:
+          - mountPath: /bitnami/elasticsearch/data
+            name: ${OBJECT_NAME_PREFIX}-data
+        volumes:
+        - name: ${OBJECT_NAME_PREFIX}-data
+          persistentVolumeClaim:
+            claimName: ${OBJECT_NAME_PREFIX}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      name: elasticsearch
+    name: elasticsearch
+  spec:
+    clusterIP: None
+    ports:
+    - name: data
+      port: 9200
+    - name: transport
+      port: 9300
+    selector:
+      app: ${OBJECT_NAME_PREFIX}
+parameters:
+- description: Name prefix for each object created
+  name: OBJECT_NAME_PREFIX
+  required: true
+  value: elasticsearch
+- description: Capacity for Elasticsearch's PVC
+  name: VOLUME_CAPACITY
+  required: true
+  value: 10Gi
