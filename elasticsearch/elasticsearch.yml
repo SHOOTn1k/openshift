@@ -124,7 +124,7 @@ objects:
       spec:
         containers:
           - image: bitnami/kibana:7.9.0
-            imagePullPolicy: ifNotPresent
+            imagePullPolicy: IfNotPresent
             name: kibana
             ports:
               - containerPort: 5601
@@ -154,7 +154,7 @@ parameters:
 - description: Name prefix for each kibana-related object created
   name: KIBANA_NAME_PREFIX
   required: true
-  value: elasticsearch
+  value: kibana
 - description: Capacity for Elasticsearch's PVC
   name: ELASTIC_VOLUME_CAPACITY
   required: true
