@@ -47,8 +47,8 @@ objects:
         annotations:
           openshift.io/generated-by: template
         labels:
-          app: elasticsearch
-          deploymentconfig: elasticsearch
+          app: ${ELASTIC_NAME_PREFIX}
+          deploymentconfig: ${ELASTIC_NAME_PREFIX}
       spec:
         containers:
         - image: bitnami/elasticsearch:7.9.0
